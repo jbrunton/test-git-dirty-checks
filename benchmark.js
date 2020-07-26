@@ -54,10 +54,12 @@ const commands = [
 ]
 
 for (let command of commands) {
+  console.log(`Starting test for "${command}"`)
   sh.exec(`touch ${newFilePath}`)
   sh.exec(`echo foobar > ${existingFilePath}`)
-  console.time(command)
+  console.time('execution time')
   sh.exec(command)
-  console.timeLog(command)
+  console.timeLog('execution time')
   sh.exec(`git reset --hard HEAD && git clean -f`)
+  console.log()
 }
