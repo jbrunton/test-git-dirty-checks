@@ -27,31 +27,84 @@ function test(command) {
   process.chdir(tmpdir.name);
   initRepo()
 
-  console.log('\nScenario: clean repo')
-  run(command)
+  const scenarios = [
+    ['clean repo', function() {
+      return sh.exec(command)
+    }],
+    ['untracked file', function() {
+      sh.exec('echo content2 > file2')
+      return sh.exec(command)
+    }],
+    ['staged change', function() {
+      sh.exec('git add file2')
+      return sh.exec(command)
+    }],
+    ['commited file', function() {
+      sh.exec('git commit -m "add file2"')
+      return sh.exec(command)
+    }],
+    ['touch file', function() {
+      return [...Array(10)].map(i => {
+        sh.exec('touch file2')
+        return sh.exec(command)
+      })
+    }],
+    ['unstaged change', function() {
+      sh.exec('echo foo > file2')
+      return sh.exec(command)
+    }]
+  ]
 
-  console.log('\nScenario: untracked file')
-  sh.exec('echo content2 > file2')
-  run(command)
-
-  console.log('\nScenario: staged change')
-  sh.exec('git add file2')
-  run(command)
-
-  console.log('\nScenario: committed file (clean repo)')
-  sh.exec('git commit -m "add file2"')
-  run(command)
-
-  console.log('\nScenario: touch file')
-  const resultCodes = Array.from(Array(10).keys()).map(i => {
-    sh.exec('touch file2')
-    return sh.exec(command).code
+  const results = scenarios.map(scenario => {
+    const result = scenario[1]()
+    if (Array.isArray(result)) {
+      return {
+        scenario: scenario[0],
+        code: {
+          0: result.filter(x => x.code == 0).length,
+          1: result.filter(x => x.code == 1).length
+        },
+        stdoutEmpty: {
+          true: result.filter(x => x.stdout == '').length,
+          false: result.filter(x => x.stdout != '').length
+        }
+      }
+    } else {
+      return {
+        scenario: scenario[0],
+        code: result.code,
+        stdoutEmpty: result.stdout == ''
+      }
+    }
   })
-  console.log(`  codes: ${resultCodes}`)
 
-  console.log('\nScenario: unstaged change')
-  sh.exec('echo foo > file2')
-  run(command)
+  console.table(results)
+
+  // console.log('\nScenario: clean repo')
+  // run(command)
+
+  // console.log('\nScenario: untracked file')
+  // sh.exec('echo content2 > file2')
+  // run(command)
+
+  // console.log('\nScenario: staged change')
+  // sh.exec('git add file2')
+  // run(command)
+
+  // console.log('\nScenario: committed file (clean repo)')
+  // sh.exec('git commit -m "add file2"')
+  // run(command)
+
+  // console.log('\nScenario: touch file')
+  // const resultCodes = Array.from(Array(10).keys()).map(i => {
+  //   sh.exec('touch file2')
+  //   return sh.exec(command).code
+  // })
+  // console.log(`  codes: ${resultCodes}`)
+
+  // console.log('\nScenario: unstaged change')
+  // sh.exec('echo foo > file2')
+  // run(command)
 }
 
 test('git diff --quiet')
