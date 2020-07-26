@@ -39,8 +39,10 @@ async function test(command) {
 
   console.log('\nScenario: touch file')
   sh.exec('touch file2')
-  await sleep(1)
-  run(command)
+  const result = sh.exec(command)
+  console.log('code: ' + result.code)
+  //await sleep(10)
+  //run(command)
 }
 
 function sleep(ms) {
