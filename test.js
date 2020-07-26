@@ -17,7 +17,9 @@ function run(command) {
   console.log(`  code: ${result.code}`)
 }
 
-async function test(command) {
+function test(command) {
+  console.log(`\nStarting testing run for command: ${command}`)
+
   const tmpdir = tmp.dirSync()
   process.chdir(tmpdir.name);
   initRepo()
@@ -38,22 +40,12 @@ async function test(command) {
   run(command)
 
   console.log('\nScenario: touch file')
-  sh.exec('touch file2')
-  const result = sh.exec(command)
-  console.log('code: ' + result.code)
-  //await sleep(10)
-  //run(command)
+  const resultCodes = Array.from(Array(10).keys()).map(i => {
+    sh.exec('touch file2')
+    return sh.exec(command).code
+  })
+  console.log(`  codes: ${resultCodes}`)
 }
 
-function sleep(ms) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
-
-async function main() {
-  await test('git diff --quiet')
-  await test('git diff-index --quiet HEAD --')  
-}
-
-main()
+test('git diff --quiet')
+test('git diff-index --quiet HEAD --')  
