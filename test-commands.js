@@ -1,7 +1,4 @@
 const sh = require('shelljs')
-const path = require('path')
-const fs = require('fs')
-const assert = require('assert')
 const tmp = require('tmp')
 
 function initRepo() {
