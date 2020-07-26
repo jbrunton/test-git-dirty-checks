@@ -58,6 +58,6 @@ for (let command of commands) {
   sh.exec(`echo foobar > ${existingFilePath}`)
   console.time(command)
   sh.exec(command)
-  console.timeEnd(command)
-  sh.exec(`git clean`)
+  console.timeLog(command)
+  sh.exec(`git reset --hard HEAD && git clean -f`)
 }
