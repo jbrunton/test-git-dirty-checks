@@ -11,11 +11,8 @@ function initRepo() {
   sh.exec('git commit -m "add file1" file1')
 }
 
-function run(command) {
-  const result = sh.exec(command)
-  console.log(`  code: ${result.code}`)
-  console.log(`  stdout empty: ${result.stdout == ''}`)
-}
+const expectedFailures = ['staged change', 'unstaged change']
+const candidateCommands = []
 
 function test(command) {
   const heading = `* Starting testing run for command: ${command} *`
@@ -55,23 +52,27 @@ function test(command) {
     }]
   ]
 
+
   const results = scenarios.map(scenario => {
     const [scenarioName, run] = scenario;
     const output = run()
+    const result = {
+      scenario: scenarioName
+    };
     if (Array.isArray(output)) {
-      const result = {
-        scenario: scenarioName
-      };
       if (output.every(x => x.code == 1)) {
         result.code = 'always 1'
+        result.failure = true
       } else if (output.every(x => x.code == 0)) {
         result.code = 'always 0'
+        result.failure = false
       } else {
         result.code = '<various>'
         result.codes = {
           0: output.filter(x => x.code == 0).length,
           1: output.filter(x => x.code == 1).length
         }
+        result.failure = '<nondeterministic>'
       }
       if (output.every(x => x.stdout == '')) {
         result.stdoutEmpty = 'always true'
@@ -81,23 +82,32 @@ function test(command) {
         console.log('unexpected output')
         process.exit(1)
       }
-
-      return result
     } else {
-      return {
-        scenario: scenarioName,
-        code: output.code,
-        stdoutEmpty: output.stdout == ''
-      }
+      result.code = output.code
+      result.stdoutEmpty = output.stdout == ''
+      result.failure = result.code == 1 || result.stdoutEmpty == false
     }
+    result.expectedFailure = expectedFailures.includes(scenarioName)
+    return result
   })
 
-  console.table(results, ['scenario', 'stdoutEmpty', 'code', 'codes'])
+  console.table(results, ['scenario', 'stdoutEmpty', 'code', 'codes', 'expectedFailure', 'failure'])
+
+  const candidateCommand = results.every(result => result.expectedFailure == result.failure)
+  if (candidateCommand) {
+    console.log(`"${command}" is a candidate command`)
+    candidateCommands.push(command)
+  } else {
+    console.log(`"${command}" is NOT a candidate command`)
+  }
 }
 
 test('git diff --quiet')
 test('git diff --quiet --staged')
 test('git diff --quiet HEAD')
 test('git diff-index --quiet HEAD --')
+test('git update-index -q --refresh && git diff-index --quiet HEAD --')
 test('git status --porcelain')  
 test('git status -suno')
+
+console.log('\ncandidate commands: \n  ' + candidateCommands.join("\n  "))
