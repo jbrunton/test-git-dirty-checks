@@ -17,33 +17,41 @@ function run(command) {
   console.log(`  code: ${result.code}`)
 }
 
-function test(command) {
+async function test(command) {
   const tmpdir = tmp.dirSync()
-  console.log('tmp dir: ' + tmpdir.name)
   process.chdir(tmpdir.name);
   initRepo()
 
-  console.log('testing on a clean repo...')
+  console.log('\nScenario: clean repo')
   run(command)
 
-  console.log('testing with an untracked file')
+  console.log('\nScenario: untracked file')
   sh.exec('echo content2 > file2')
   run(command)
 
-  console.log('testing with a change file in index')
+  console.log('\nScenario: staged change')
   sh.exec('git add file2')
   run(command)
 
-  console.log('testing with a committed file')
+  console.log('\nScenario: committed file (clean repo)')
   sh.exec('git commit -m "add file2"')
   run(command)
 
-  console.log('testing after touching a file')
+  console.log('\nScenario: touch file')
   sh.exec('touch file2')
+  await sleep(1)
   run(command)
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
 
-test('git diff --quiet')
-test('git diff-index --quiet HEAD --')
+async function main() {
+  await test('git diff --quiet')
+  await test('git diff-index --quiet HEAD --')  
+}
 
+main()
