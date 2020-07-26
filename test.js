@@ -12,7 +12,6 @@ function initRepo() {
 }
 
 function run(command) {
-  console.log(`running: "${command}"`)
   const result = sh.exec(command)
   console.log(`  code: ${result.code}`)
 }
@@ -45,6 +44,10 @@ function test(command) {
     return sh.exec(command).code
   })
   console.log(`  codes: ${resultCodes}`)
+
+  console.log('\nScenario: unstaged change')
+  sh.exec('echo foo > file2')
+  run(command)
 }
 
 test('git diff --quiet')
