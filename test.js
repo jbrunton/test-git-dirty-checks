@@ -56,55 +56,43 @@ function test(command) {
   ]
 
   const results = scenarios.map(scenario => {
-    const result = scenario[1]()
-    if (Array.isArray(result)) {
-      return {
-        scenario: scenario[0],
-        code: {
-          0: result.filter(x => x.code == 0).length,
-          1: result.filter(x => x.code == 1).length
-        },
-        stdoutEmpty: {
-          true: result.filter(x => x.stdout == '').length,
-          false: result.filter(x => x.stdout != '').length
+    const [scenarioName, run] = scenario;
+    const output = run()
+    if (Array.isArray(output)) {
+      const result = {
+        scenario: scenarioName
+      };
+      if (output.every(x => x.code == 1)) {
+        result.code = 'always 1'
+      } else if (output.every(x => x.code == 0)) {
+        result.code = 'always 0'
+      } else {
+        result.code = '<various>'
+        result.codes = {
+          0: output.filter(x => x.code == 0).length,
+          1: output.filter(x => x.code == 1).length
         }
       }
+      if (output.every(x => x.stdout == '')) {
+        result.stdoutEmpty = 'always true'
+      } else if (output.every(x => x.stdout != '')) {
+        result.stdoutEmpty = 'always false'
+      } else {
+        console.log('unexpected output')
+        process.exit(1)
+      }
+
+      return result
     } else {
       return {
-        scenario: scenario[0],
-        code: result.code,
-        stdoutEmpty: result.stdout == ''
+        scenario: scenarioName,
+        code: output.code,
+        stdoutEmpty: output.stdout == ''
       }
     }
   })
 
-  console.table(results)
-
-  // console.log('\nScenario: clean repo')
-  // run(command)
-
-  // console.log('\nScenario: untracked file')
-  // sh.exec('echo content2 > file2')
-  // run(command)
-
-  // console.log('\nScenario: staged change')
-  // sh.exec('git add file2')
-  // run(command)
-
-  // console.log('\nScenario: committed file (clean repo)')
-  // sh.exec('git commit -m "add file2"')
-  // run(command)
-
-  // console.log('\nScenario: touch file')
-  // const resultCodes = Array.from(Array(10).keys()).map(i => {
-  //   sh.exec('touch file2')
-  //   return sh.exec(command).code
-  // })
-  // console.log(`  codes: ${resultCodes}`)
-
-  // console.log('\nScenario: unstaged change')
-  // sh.exec('echo foo > file2')
-  // run(command)
+  console.table(results, ['scenario', 'stdoutEmpty', 'code', 'codes'])
 }
 
 test('git diff --quiet')
