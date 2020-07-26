@@ -14,10 +14,14 @@ function initRepo() {
 function run(command) {
   const result = sh.exec(command)
   console.log(`  code: ${result.code}`)
+  console.log(`  stdout empty: ${result.stdout == ''}`)
 }
 
 function test(command) {
-  console.log(`\nStarting testing run for command: ${command}`)
+  const heading = `* Starting testing run for command: ${command} *`
+  console.log('\n' + '*'.repeat(heading.length))
+  console.log(heading)
+  console.log('*'.repeat(heading.length) + '\n')
 
   const tmpdir = tmp.dirSync()
   process.chdir(tmpdir.name);
@@ -51,4 +55,8 @@ function test(command) {
 }
 
 test('git diff --quiet')
-test('git diff-index --quiet HEAD --')  
+test('git diff --quiet --staged')
+test('git diff --quiet HEAD')
+test('git diff-index --quiet HEAD --')
+test('git status --porcelain')  
+test('git status -suno')
