@@ -2,46 +2,48 @@ const sh = require('shelljs')
 const path = require('path')
 const fs = require('fs')
 const assert = require('assert')
+const tmp = require('tmp')
+
+function initRepo() {
+  sh.exec('git init')
+  sh.exec('echo content1 > file1')
+  sh.exec('git add file1')
+  sh.exec('git commit -m "add file1" file1')
+}
 
 function run(command) {
   console.log(`running: "${command}"`)
   const result = sh.exec(command)
   console.log(`  code: ${result.code}`)
-  console.log(`  stdout: ${result.stdout}`)
-  console.log(`  stdout: ${result.stderr}`)
 }
 
-function failWith(message) {
-  console.log(message)
-  process.exit(1)
+function test(command) {
+  const tmpdir = tmp.dirSync()
+  console.log('tmp dir: ' + tmpdir.name)
+  process.chdir(tmpdir.name);
+  initRepo()
+
+  console.log('testing on a clean repo...')
+  run(command)
+
+  console.log('testing with an untracked file')
+  sh.exec('echo content2 > file2')
+  run(command)
+
+  console.log('testing with a change file in index')
+  sh.exec('git add file2')
+  run(command)
+
+  console.log('testing with a committed file')
+  sh.exec('git commit -m "add file2"')
+  run(command)
+
+  console.log('testing after touching a file')
+  sh.exec('touch file2')
+  run(command)
 }
 
-if (process.argv.length != 4) {
-  failWith('Usage: node test.js path/to/repo file')
-}
 
-const repoPath = process.argv[2]
-const filePath = path.join(repoPath, process.argv[3])
-
-if (!fs.existsSync(repoPath)) {
-  failWith(`Directory does not exist: ${repoPath}`)
-}
-
-if (!fs.lstatSync(repoPath).isDirectory()) {
-  failWith(`${repoPath} is not a directory`)
-}
-
-if (!fs.existsSync(path.join(repoPath, ".git"))) {
-  failWith(`${repoPath} is not a git repository`)
-}
-
-if (!fs.existsSync(filePath)) {
-  failWith(`File does not exist: ${filePath}`)
-}
-
-if (sh.exec('git status --porcelain').stdout != "") {
-  failWith(`${repoPath} is not a clean repo, aborting`)
-}
-
-run('git diff --quiet')
+test('git diff --quiet')
+test('git diff-index --quiet HEAD --')
 
