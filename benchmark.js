@@ -57,9 +57,9 @@ for (let command of commands) {
   console.log(`Starting test for "${command}"`)
   sh.exec(`touch ${newFilePath}`)
   sh.exec(`echo foobar > ${existingFilePath}`)
-  console.time('execution time')
+  console.time(command)
   sh.exec(command)
-  console.timeLog('execution time')
+  console.timeLog(command)
   sh.exec(`git reset --hard HEAD && git clean -f`)
   console.log()
 }
