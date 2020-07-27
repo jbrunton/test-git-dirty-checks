@@ -1,51 +1,51 @@
 const sh = require('shelljs')
 const tmp = require('tmp')
 
+function exec(command) {
+  return sh.exec(command, { silent: true })
+}
+
 function initRepo() {
-  sh.exec('git init')
-  sh.exec('echo content1 > file1')
-  sh.exec('git add file1')
-  sh.exec('git commit -m "add file1" file1')
+  exec('git init')
+  exec('echo content1 > file1')
+  exec('git add file1')
+  exec('git commit -m "add file1" file1')
 }
 
 const expectedFailures = ['staged change', 'unstaged change']
 const candidateCommands = []
 
 function test(command) {
-  const heading = `* Starting testing run for command: ${command} *`
-  console.log('\n' + '*'.repeat(heading.length))
-  console.log(heading)
-  console.log('*'.repeat(heading.length) + '\n')
-
+  console.log(`Starting test run for command: ${command}`)
   const tmpdir = tmp.dirSync()
   process.chdir(tmpdir.name);
   initRepo()
 
   const scenarios = [
     ['clean repo', function() {
-      return sh.exec(command)
+      return exec(command)
     }],
     ['untracked file', function() {
-      sh.exec('echo content2 > file2')
-      return sh.exec(command)
+      exec('echo content2 > file2')
+      return exec(command)
     }],
     ['staged change', function() {
-      sh.exec('git add file2')
-      return sh.exec(command)
+      exec('git add file2')
+      return exec(command)
     }],
     ['commited file', function() {
-      sh.exec('git commit -m "add file2"')
-      return sh.exec(command)
+      exec('git commit -m "add file2"')
+      return exec(command)
     }],
     ['touch file', function() {
       return [...Array(10)].map(i => {
-        sh.exec('touch file2')
-        return sh.exec(command)
+        exec('touch file2')
+        return exec(command)
       })
     }],
     ['unstaged change', function() {
-      sh.exec('echo foo > file2')
-      return sh.exec(command)
+      exec('echo foo > file2')
+      return exec(command)
     }]
   ]
 
@@ -64,11 +64,7 @@ function test(command) {
         result.code = 'always 0'
         result.failure = false
       } else {
-        result.code = '<various>'
-        result.codes = {
-          0: output.filter(x => x.code == 0).length,
-          1: output.filter(x => x.code == 1).length
-        }
+        result.code = `<various> (${output.filter(x => x.code == 0).length} x 0, ${output.filter(x => x.code == 1).length} x 1)`
         result.failure = '<nondeterministic>'
       }
       if (output.every(x => x.stdout == '')) {
@@ -88,14 +84,14 @@ function test(command) {
     return result
   })
 
-  console.table(results, ['scenario', 'stdoutEmpty', 'code', 'codes', 'expectedFailure', 'failure'])
+  console.table(results, ['scenario', 'stdoutEmpty', 'code', 'expectedFailure', 'failure'])
 
   const candidateCommand = results.every(result => result.expectedFailure == result.failure)
   if (candidateCommand) {
-    console.log(`"${command}" is a candidate command`)
+    console.log(`"${command}" is a candidate command\n`)
     candidateCommands.push(command)
   } else {
-    console.log(`"${command}" is NOT a candidate command`)
+    console.log(`"${command}" is NOT a candidate command\n`)
   }
 }
 
