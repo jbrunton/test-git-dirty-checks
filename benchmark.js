@@ -62,61 +62,6 @@ function exec(command) {
 global.sh = sh
 global.exec = exec
 
-// for (let command of commands) {
-//   const benchmark = new Benchmark(command, function() {
-//     console.log('running: ' + command)
-//     sh.exec(command)
-//   }, {
-//     'setup': function() {
-//       try {
-//       console.log('setup')
-//       sh.exec('git st')
-//       console.log('setup 2')
-//       }
-//       catch(e) {
-//         console.log(e)
-//       }
-//       //sh.exec(`touch ${newFilePath}`)
-//       //sh.exec(`echo foobar > ${existingFilePath}`)  
-//     },
-//     'teardown': function() {
-//       console.log('teardown')
-//       sh.exec(`git reset --hard HEAD && git clean -f`)
-//     }
-//   })
-//   benchmark.run({ async: false })
-// }
-
-// global.setup = function() {
-//   try {
-//     console.log('setup')
-//     sh.exec('git st')
-//     console.log('setup 2')
-//     sh.exec(`touch ${newFilePath}`)
-//     sh.exec(`echo foobar > ${existingFilePath}`)  
-//   } catch(e) {
-//     console.log(e)
-//   }
-// }
-
-// global.teardown = function() {
-//   try {
-//     console.log('teardown')
-//     sh.exec(`git reset --hard HEAD && git clean -f`)
-//   } catch(e) {
-//     console.log(e)
-//   }
-// }
-
-// suite.add('git diff --quiet HEAD', function() {
-//   try {
-//     console.log('running...')
-
-//   } catch(e) {
-//     console.log(e)
-//   }
-// })
-
 function setup() {
   exec(`touch ${newFilePath}`)
   exec(`echo foobar > ${existingFilePath}`)
