@@ -78,7 +78,7 @@ suite
       return {
         name: result.name,
         'ops/sec': result.hz,
-        error: `±${result.stats.rme.toFixed(2)}% (${result.hz * (1 - result.stats.rme)}, ${result.hz * (1 + result.stats.rme)})`,
+        error: `±${result.stats.rme.toFixed(2)}% (${result.hz * (1 - result.stats.rme / 100)}, ${result.hz * (1 + result.stats.rme / 100)})`,
         mean: `${result.stats.mean.toFixed(2)}s`,
         samples: result.stats.sample.length
       }
