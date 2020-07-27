@@ -18,10 +18,6 @@ const repoPath = path.isAbsolute(process.argv[2]) ? process.argv[2] : path.join(
 const existingFilePath = path.join(repoPath, process.argv[3])
 const newFilePath = path.join(repoPath, process.argv[4])
 
-console.log(`repoPath: ${repoPath}`)
-console.log(`existingFilePath:${existingFilePath}`)
-console.log(`newFilePath: ${newFilePath}`)
-
 if (!fs.existsSync(repoPath)) {
   failWith(`${repoPath} does not exist`)
 }
@@ -63,11 +59,15 @@ global.sh = sh
 global.exec = exec
 
 function setup() {
+  console.log(`repo: ${repoPath}`)
+  console.log(`modifying existing file: ${existingFilePath}`)
+  console.log(`creating new file: ${newFilePath}`)
   exec(`touch ${newFilePath}`)
   exec(`echo foobar > ${existingFilePath}`)
 }
 
 function teardown() {
+  console.log('cleaning up repo...')
   exec('git reset --hard HEAD && git clean -f')
 }
 
@@ -99,14 +99,19 @@ suite
     const results = this.map(result => {
       return {
         name: result.name,
-        'ops/sec': result.hz,
-        error: `±${result.stats.rme.toFixed(2)}% (${result.hz * (1 - result.stats.rme / 100)}, ${result.hz * (1 + result.stats.rme / 100)})`,
+        hz: result.hz,
+        'ops/sec': result.hz.toFixed(2),
+        error: `±${result.stats.rme.toFixed(2)}% (${(result.hz * (1 - result.stats.rme / 100)).toFixed(2)}, ${(result.hz * (1 + result.stats.rme / 100)).toFixed(2)})`,
         mean: `${result.stats.mean.toFixed(2)}s`,
-        samples: result.stats.sample.length
+        'sample count': result.stats.sample.length,
+        sample: JSON.stringify(result.stats.sample.map(x => x.toFixed(2)))
       }
     })
-    console.table(_.orderBy(results, 'hz', 'desc'), ['name', 'ops/sec', 'error', 'mean', 'samples'])
+    console.table(_.orderBy(results, 'hz', 'desc'), ['name', 'ops/sec', 'error', 'mean', 'sample count', 'sample'])
+    console.log('Fastest is ' + this.filter('fastest').map('name'));
   })
   .run({ async: false })
 
-  teardown()
+console
+
+teardown()
