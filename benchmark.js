@@ -1,6 +1,7 @@
 const path = require('path')
 const fs = require('fs')
 const assert = require('assert')
+const _ = require('lodash')
 const sh = require('shelljs')
 const Benchmark = require('benchmark');
 
@@ -58,14 +59,10 @@ const suite = new Benchmark.Suite;
 
 for (let command of commands) {
   suite.add(command, function() {
-    console.log(`Starting test for "${command}"`)
     sh.exec(`touch ${newFilePath}`)
     sh.exec(`echo foobar > ${existingFilePath}`)
-    //console.time(command)
-    sh.exec(command)
-    //console.timeLog(command)
-    sh.exec(`git reset --hard HEAD && git clean -f`)
-    //console.log()  
+    sh.exec(command, { silent: true })
+    sh.exec(`git reset --hard HEAD && git clean -f`, { silent: true })
   })
 }
 
@@ -73,14 +70,18 @@ suite
   .on('cycle', function(event) {
     console.log(String(event.target));
   })
+  .on('reset', function() {
+    console.log('*** reset')
+  })
   .on('complete', function() {
-    console.table(this.map(result => {
+    const results = this.map(result => {
       return {
         name: result.name,
-        mean: result.stats.mean,
-        variance: result.stats.variance
+        'ops/sec': result.hz,
+        error: `±${result.stats.rme.toFixed(2)}%`,
+        samples: result.stats.sample.length
       }
-    }))
-    console.log('Fastest is ' + this.filter('fastest').map('name'));
+    })
+    console.table(_.orderBy(results, 'hz', 'desc'), ['name', 'ops/sec', 'error', 'samples'])
   })
   .run({ async: false })
