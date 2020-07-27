@@ -10,8 +10,21 @@ Setup:
     cd test-git-dirty-checks
     npm install
 
-Test for candidate commands:
+## Test for candidate commands:
+
+Run:
 
     node test-commands.js
 
 The script will evaluate a bunch of commands to determine which fit all necessary criteria.
+
+## Benchmarking commands
+
+For example, to run against the WebKit repo:
+
+    node benchmark.js path/to/WebKit/ Makefile file1
+
+In the setup, this will:
+
+* Amend the tracked file `Makefile`.
+* Add an untracked file `file`.
