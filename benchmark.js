@@ -78,10 +78,11 @@ suite
       return {
         name: result.name,
         'ops/sec': result.hz,
-        error: `±${result.stats.rme.toFixed(2)}%`,
+        error: `±${result.stats.rme.toFixed(2)}% (${result.hz * (1 - result.stats.rme)}, ${result.hz * (1 + result.stats.rme)})`,
+        mean: `${result.stats.mean.toFixed(2)}s`,
         samples: result.stats.sample.length
       }
     })
-    console.table(_.orderBy(results, 'hz', 'desc'), ['name', 'ops/sec', 'error', 'samples'])
+    console.table(_.orderBy(results, 'hz', 'desc'), ['name', 'ops/sec', 'error', 'mean', 'samples'])
   })
   .run({ async: false })
