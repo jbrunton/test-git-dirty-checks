@@ -48,7 +48,7 @@ const commands = [
   'git diff --quiet HEAD',
   'git update-index -q --refresh && git diff-index --quiet HEAD --',
   'git status --porcelain --untracked-files=no',
-  'git status -suno'
+  'git status --short --untracked-files=no'
 ]
 
 function exec(command) {
