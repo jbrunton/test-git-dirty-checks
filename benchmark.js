@@ -2,6 +2,7 @@ const path = require('path')
 const fs = require('fs')
 const assert = require('assert')
 const sh = require('shelljs')
+const Benchmark = require('benchmark');
 
 function failWith(message) {
   console.log(message)
@@ -53,13 +54,33 @@ const commands = [
   'git status -suno'
 ]
 
+const suite = new Benchmark.Suite;
+
 for (let command of commands) {
-  console.log(`Starting test for "${command}"`)
-  sh.exec(`touch ${newFilePath}`)
-  sh.exec(`echo foobar > ${existingFilePath}`)
-  console.time(command)
-  sh.exec(command)
-  console.timeLog(command)
-  sh.exec(`git reset --hard HEAD && git clean -f`)
-  console.log()
+  suite.add(command, function() {
+    console.log(`Starting test for "${command}"`)
+    sh.exec(`touch ${newFilePath}`)
+    sh.exec(`echo foobar > ${existingFilePath}`)
+    //console.time(command)
+    sh.exec(command)
+    //console.timeLog(command)
+    sh.exec(`git reset --hard HEAD && git clean -f`)
+    //console.log()  
+  })
 }
+
+suite
+  .on('cycle', function(event) {
+    console.log(String(event.target));
+  })
+  .on('complete', function() {
+    console.table(this.map(result => {
+      return {
+        name: result.name,
+        mean: result.stats.mean,
+        variance: result.stats.variance
+      }
+    }))
+    console.log('Fastest is ' + this.filter('fastest').map('name'));
+  })
+  .run({ async: false })
