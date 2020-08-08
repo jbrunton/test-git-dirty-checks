@@ -81,7 +81,9 @@ function createSuite() {
         console.log(e)
       }
     `)
-    suite.add(command, fn)
+    suite.add(command, fn, {
+      minSamples: 10
+    })
   }
   return suite
 }
@@ -103,11 +105,10 @@ suite
         'ops/sec': result.hz.toFixed(2),
         error: `±${result.stats.rme.toFixed(2)}% (${(result.hz * (1 - result.stats.rme / 100)).toFixed(2)}, ${(result.hz * (1 + result.stats.rme / 100)).toFixed(2)})`,
         mean: `${result.stats.mean.toFixed(2)}s`,
-        'sample count': result.stats.sample.length,
-        sample: JSON.stringify(result.stats.sample.map(x => x.toFixed(2)))
+        'sample count': result.stats.sample.length
       }
     })
-    console.table(_.orderBy(results, 'hz', 'desc'), ['name', 'ops/sec', 'error', 'mean', 'sample count', 'sample'])
+    console.table(_.orderBy(results, 'hz', 'desc'), ['name', 'ops/sec', 'error', 'mean', 'sample count'])
     console.log('Fastest is ' + this.filter('fastest').map('name'));
   })
   .run({ async: false })
