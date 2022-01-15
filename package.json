@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "benchmark": "^2.1.4",
-    "shelljs": "^0.8.4",
+    "shelljs": "^0.8.5",
     "tmp": "^0.2.1"
   }
 }
